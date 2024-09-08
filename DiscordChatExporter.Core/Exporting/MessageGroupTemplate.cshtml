@@ -36,6 +36,7 @@
 <div class="chatlog__message-group">
 @foreach (var (message, i) in Messages.WithIndex())
 {
+    if (message.IsSystemNotification) continue;
     var isFirst = i == 0;
 
     var authorMember = Context.TryGetMember(message.Author.Id);
@@ -46,199 +47,14 @@
 
     <div id="chatlog__message-container-@message.Id" class="chatlog__message-container @(message.IsPinned ? "chatlog__message-container--pinned" : null)" data-message-id="@message.Id">
         <div class="chatlog__message">
-            @* System notification *@
-            @if (message.IsSystemNotification)
+            @* Regular message *@
+            @if (true)
             {
-                <div class="chatlog__message-aside">
-                    <svg class="chatlog__system-notification-icon">
-                        @{
-                            var icon = message.Kind switch {
-                                MessageKind.RecipientAdd => "join-icon",
-                                MessageKind.RecipientRemove => "leave-icon",
-                                MessageKind.Call => "call-icon",
-                                MessageKind.ChannelNameChange => "pencil-icon",
-                                MessageKind.ChannelIconChange => "pencil-icon",
-                                MessageKind.ChannelPinnedMessage => "pin-icon",
-                                MessageKind.GuildMemberJoin => "join-icon",
-                                MessageKind.ThreadCreated => "thread-icon",
-                                _ => "pencil-icon"
-                            };
-                        }
-
-                        <use href="#@icon"></use>
-                    </svg>
-                </div>
-
-                <div class="chatlog__message-primary">
-                    @* Author name *@
-                    <span class="chatlog__system-notification-author" style="@(authorColor is not null ? $"color: rgb({authorColor.Value.R}, {authorColor.Value.G}, {authorColor.Value.B})" : null)" title="@message.Author.FullName" data-user-id="@message.Author.Id">@authorDisplayName</span>
-
-                    @* Space out the content *@
-                    <span> </span>
-
-                    @* System notification content *@
-                    <span class="chatlog__system-notification-content">
-                        @if (message.Kind == MessageKind.RecipientAdd && message.MentionedUsers.Any())
-                        {
-                            <span>added </span>
-                            <a class="chatlog__system-notification-link" title="@message.MentionedUsers.First().FullName">@message.MentionedUsers.First().DisplayName</a>
-                            <span> to the group.</span>
-                        }
-                        else if (message.Kind == MessageKind.RecipientRemove && message.MentionedUsers.Any())
-                        {
-                            if (message.Author.Id == message.MentionedUsers.First().Id)
-                            {
-                                <span>left the group.</span>
-                            }
-                            else
-                            {
-                                <span>removed </span>
-                                <a class="chatlog__system-notification-link" title="@message.MentionedUsers.First().FullName">@message.MentionedUsers.First().DisplayName</a>
-                                <span> from the group.</span>
-                            }
-                        }
-                        else if (message.Kind == MessageKind.Call)
-                        {
-                            <span>started a call that lasted @(((message.CallEndedTimestamp ?? message.Timestamp) - message.Timestamp).TotalMinutes.ToString("n0", Context.Request.CultureInfo)) minutes</span>
-                        }
-                        else if (message.Kind == MessageKind.ChannelNameChange)
-                        {
-                            <span>changed the channel name: </span>
-                            <span class="chatlog__system-notification-link">@message.Content</span>
-                        }
-                        else if (message.Kind == MessageKind.ChannelIconChange)
-                        {
-                            <span>changed the channel icon.</span>
-                        }
-                        else if (message.Kind == MessageKind.ChannelPinnedMessage && message.Reference is not null)
-                        {
-                            <span>pinned </span>
-                            <a class="chatlog__system-notification-link" href="#chatlog__message-container-@message.Reference.MessageId">a message</a>
-                            <span> to this channel.</span>
-                        }
-                        else if (message.Kind == MessageKind.ThreadCreated)
-                        {
-                            <span>started a thread.</span>
-                        }
-                        else if (message.Kind == MessageKind.GuildMemberJoin)
-                        {
-                            <span>joined the server.</span>
-                        }
-                        else
-                        {
-                            <span>@message.Content.ToLowerInvariant()</span>
-                        }
-                    </span>
-
-                    @* Timestamp *@
-                    <span class="chatlog__system-notification-timestamp" title="@FormatDate(message.Timestamp, "f")">
-                        <a href="#chatlog__message-container-@message.Id">@FormatDate(message.Timestamp)</a>
-                    </span>
-                </div>
-            }
-            // Regular message
-            else
-            {
-                <div class="chatlog__message-aside">
-                    @if (isFirst)
-                    {
-                        // Reply symbol
-                        if (message.IsReplyLike)
-                        {
-                            <div class="chatlog__reply-symbol"></div>
-                        }
-
-                        // Avatar
-                        <img class="chatlog__avatar" src="@await ResolveAssetUrlAsync(authorMember?.AvatarUrl ?? message.Author.AvatarUrl)" alt="Avatar" loading="lazy">
-                    }
-                    else
-                    {
-                        <div class="chatlog__short-timestamp" title="@FormatDate(message.Timestamp, "f")">@FormatDate(message.Timestamp, "t")</div>
-                    }
-                </div>
-
                 <div class="chatlog__message-primary">
                     @if (isFirst)
                     {
-                        // Message referenced by the reply
-                        if (message.IsReplyLike)
-                        {
-                            <div class="chatlog__reply">
-                                @if (message.ReferencedMessage is not null)
-                                {
-                                    var referencedUserMember = Context.TryGetMember(message.ReferencedMessage.Author.Id);
-                                    var referencedUserColor = Context.TryGetUserColor(message.ReferencedMessage.Author.Id);
-                                    var referencedUserDisplayName = message.ReferencedMessage.Author.IsBot
-                                        ? message.ReferencedMessage.Author.DisplayName
-                                        : referencedUserMember?.DisplayName ?? message.ReferencedMessage.Author.DisplayName;
-
-                                    <img class="chatlog__reply-avatar" src="@await ResolveAssetUrlAsync(referencedUserMember?.AvatarUrl ?? message.ReferencedMessage.Author.AvatarUrl)" alt="Avatar" loading="lazy">
-                                    <div class="chatlog__reply-author" style="@(referencedUserColor is not null ? $"color: rgb({referencedUserColor.Value.R}, {referencedUserColor.Value.G}, {referencedUserColor.Value.B})" : null)" title="@message.ReferencedMessage.Author.FullName">@referencedUserDisplayName</div>
-                                    <div class="chatlog__reply-content">
-                                        <span class="chatlog__reply-link" onclick="scrollToMessage(event, '@message.ReferencedMessage.Id')">
-                                            @if (!string.IsNullOrWhiteSpace(message.ReferencedMessage.Content) && !message.ReferencedMessage.IsContentHidden())
-                                            {
-                                                <!--wmm:ignore-->@Html.Raw(await FormatEmbedMarkdownAsync(message.ReferencedMessage.Content))<!--/wmm:ignore-->
-                                            }
-                                            else if (message.ReferencedMessage.Attachments.Any() || message.ReferencedMessage.Embeds.Any())
-                                            {
-                                                <em>Click to see attachment</em>
-                                                <span>🖼️</span>
-                                            }
-                                            else
-                                            {
-                                                <em>Click to see original message</em>
-                                            }
-                                        </span>
-
-                                        @if (message.ReferencedMessage.EditedTimestamp is not null)
-                                        {
-                                            <span class="chatlog__reply-edited-timestamp" title="@FormatDate(message.ReferencedMessage.EditedTimestamp.Value, "f")">(edited)</span>
-                                        }
-                                    </div>
-                                }
-                                else if (message.Interaction is not null)
-                                {
-                                    var interactionUserMember = Context.TryGetMember(message.Interaction.User.Id);
-                                    var interactionUserColor = Context.TryGetUserColor(message.Interaction.User.Id);
-                                    var interactionUserDisplayName = message.Interaction.User.IsBot
-                                        ? message.Interaction.User.DisplayName
-                                        : interactionUserMember?.DisplayName ?? message.Interaction.User.DisplayName;
-
-                                    <img class="chatlog__reply-avatar" src="@await ResolveAssetUrlAsync(interactionUserMember?.AvatarUrl ?? message.Interaction.User.AvatarUrl)" alt="Avatar" loading="lazy">
-                                    <div class="chatlog__reply-author" style="@(interactionUserColor is not null ? $"color: rgb({interactionUserColor.Value.R}, {interactionUserColor.Value.G}, {interactionUserColor.Value.B})" : null)" title="@message.Interaction.User.FullName">@interactionUserDisplayName</div>
-                                    <div class="chatlog__reply-content">
-                                        used /@message.Interaction.Name
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="chatlog__reply-unknown">
-                                        Original message was deleted or could not be loaded.
-                                    </div>
-                                }
-                            </div>
-                        }
-
                         // Header
                         <div class="chatlog__header">
-                            @* Author name *@
-                            <span class="chatlog__author" style="@(authorColor is not null ? $"color: rgb({authorColor.Value.R}, {authorColor.Value.G}, {authorColor.Value.B})" : null)" title="@message.Author.FullName" data-user-id="@message.Author.Id">@authorDisplayName</span>
-
-                            @* Bot tag *@
-                            @if (message.Author.IsBot)
-                            {
-                                // For cross-posts, the BOT tag is replaced with the SERVER tag
-                                if (message.Flags.HasFlag(MessageFlags.CrossPost))
-                                {
-                                    <span class="chatlog__author-tag">SERVER</span>
-                                }
-                                else
-                                {
-                                    <span class="chatlog__author-tag">BOT</span>
-                                }
-                            }
-
                             @* Timestamp *@
                             <span class="chatlog__timestamp" title="@FormatDate(message.Timestamp, "f")"><a href="#chatlog__message-container-@message.Id">@FormatDate(message.Timestamp)</a></span>
                         </div>
@@ -644,20 +460,6 @@
                             else if (sticker.Format == StickerFormat.Lottie)
                             {
                                 <div class="chatlog__sticker--media" data-source="@await ResolveAssetUrlAsync(sticker.SourceUrl)"></div>
-                            }
-                        </div>
-                    }
-
-                    @* Message reactions *@
-                    @if (message.Reactions.Any())
-                    {
-                        <div class="chatlog__reactions">
-                            @foreach (var reaction in message.Reactions)
-                            {
-                                <div class="chatlog__reaction" title="@reaction.Emoji.Code">
-                                    <img class="chatlog__emoji chatlog__emoji--small" alt="@reaction.Emoji.Name" src="@await ResolveAssetUrlAsync(reaction.Emoji.ImageUrl)" loading="lazy">
-                                    <span class="chatlog__reaction-count">@reaction.Count</span>
-                                </div>
                             }
                         </div>
                     }

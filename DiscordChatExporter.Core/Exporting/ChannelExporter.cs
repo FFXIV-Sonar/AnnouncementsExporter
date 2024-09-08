@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DiscordChatExporter.Core.Discord;
@@ -66,15 +68,16 @@ public class ChannelExporter(DiscordClient discord)
 
         // Export messages
         await using var messageExporter = new MessageExporter(context);
-        await foreach (
-            var message in discord.GetMessagesAsync(
+        var messages = await discord
+            .GetMessagesAsync(
                 request.Channel.Id,
                 request.After,
                 request.Before,
                 progress,
                 cancellationToken
             )
-        )
+            .ToListAsync();
+        foreach (var message in messages.AsEnumerable().Reverse())
         {
             try
             {

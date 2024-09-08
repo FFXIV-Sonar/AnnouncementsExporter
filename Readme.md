@@ -1,3 +1,13 @@
+# WARNING
+DO NOT USE!
+
+This fork is heavily modified for the purposes of exposing Sonar announcements outside of the Sonar Support discord.
+Some messages are hard-coded and the snapshots are limited to 20 messages, with lots of the original features removed.
+
+No support will be provided, use at your own risk / convenience (and remember to modify stuff to suit your needs if you do)
+
+
+
 # DiscordChatExporter
 
 [![Status](https://img.shields.io/badge/status-maintenance-ffd700.svg)](https://github.com/Tyrrrz/.github/blob/master/docs/project-status.md)

@@ -22,6 +22,7 @@ internal class HtmlMessageWriter(Stream stream, ExportContext context, string th
         // If the group is empty, any message can join it
         if (_messageGroup.LastOrDefault() is not { } lastMessage)
             return true;
+        return false;
 
         // Reply-like messages cannot join existing groups because they need to appear first
         if (message.IsReplyLike)
@@ -90,7 +91,7 @@ internal class HtmlMessageWriter(Stream stream, ExportContext context, string th
                 await new MessageGroupTemplate
                 {
                     Context = Context,
-                    Messages = messages
+                    Messages = messages,
                 }.RenderAsync(cancellationToken)
             )
         );
@@ -131,7 +132,7 @@ internal class HtmlMessageWriter(Stream stream, ExportContext context, string th
                 await new PostambleTemplate
                 {
                     Context = Context,
-                    MessagesWritten = MessagesWritten
+                    MessagesWritten = MessagesWritten,
                 }.RenderAsync(cancellationToken)
             )
         );

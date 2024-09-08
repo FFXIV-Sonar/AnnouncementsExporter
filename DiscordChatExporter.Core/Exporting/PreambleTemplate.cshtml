@@ -170,8 +170,6 @@
         .chatlog {
             padding: 1rem 0;
             width: 100%;
-            border-top: 1px solid @Themed("rgba(255, 255, 255, 0.1)", "#eceeef");
-            border-bottom: 1px solid @Themed("rgba(255, 255, 255, 0.1)", "#eceeef");
         }
 
         .chatlog__message-group {
@@ -239,6 +237,7 @@
 
         .chatlog__message-primary {
             grid-column: 2;
+            padding: 1rem;
             min-width: 0;
         }
 
@@ -359,9 +358,7 @@
         }
 
         .chatlog__timestamp {
-            margin-left: 0.3rem;
             color: @Themed("#a3a6aa", "#5e6772");
-            font-size: 0.75rem;
             font-weight: 500;
             direction: ltr;
             unicode-bidi: bidi-override;
@@ -1007,8 +1004,9 @@
         <img class="preamble__guild-icon" src="@await ResolveAssetUrlAsync(Context.Request.Channel.IconUrl ?? Context.Request.Guild.IconUrl)" alt="Guild icon" loading="lazy">
     </div>
     <div class="preamble__entries-container">
-        <div class="preamble__entry">@Context.Request.Guild.Name</div>
-        <div class="preamble__entry">@Context.Request.Channel.GetHierarchicalName()</div>
+        <div class="preamble__entry">Sonar</div>
+        <div class="preamble__entry">Announcements</div>
+        <div class="preamble__entry preamble__entry--small">Updated every 15 minutes</div>
 
         @if (!string.IsNullOrWhiteSpace(Context.Request.Channel.Topic))
         {
@@ -1034,7 +1032,7 @@
         }
     </div>
 </div>
-
+    
 @* Preamble cuts off at this point *@
 <!--wmm:ignore-->
 <div class="chatlog">
